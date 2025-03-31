@@ -1,0 +1,5 @@
+.venv
+.env
+duck-quant.json
+*.duckdb
+*.egg-info
