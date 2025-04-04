@@ -28,5 +28,6 @@ Navigation Path: APIs & Services > Credentials > + CREATE CREDENTIALS > Service 
 
 ### **6. Run Extraction**
 ```bash
-python gsheets_to_duckdb.py
+export DUCKDB_PATH="../data/database.duckdb"
+python gsheets.py '{"id":"my-id", "range":"range!A:O"}'
 ```
