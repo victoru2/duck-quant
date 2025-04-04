@@ -1,5 +1,9 @@
 .venv
 .env
 duck-quant.json
+variables.json
 *.duckdb
 *.egg-info
+logs
+__pycache__
+data

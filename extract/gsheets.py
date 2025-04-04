@@ -19,11 +19,11 @@ def load_gsheets_data(sheet_id: str, range_name: str):
         range_name (str): The range of cells to extract (e.g., 'range!A1:Z100')
 
     Yields:
-        list: A list of lists containing the sheet data, where each sublist 
+        list: A list of lists containing the sheet data, where each sublist
         represents a row
 
     Raises:
-        Exception: If there are issues with Google API authentication or data 
+        Exception: If there are issues with Google API authentication or data
         retrieval
     """
     creds = service_account.Credentials.from_service_account_file(
