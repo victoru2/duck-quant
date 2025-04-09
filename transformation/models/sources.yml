@@ -2,13 +2,10 @@ version: 2
 sources:
 - name: landing_zone
   database: database
-  schema: raw_data
+  schema: main
   config:
     enabled: true
   tables:
-  - name: load_gsheets_data
-    config:
-      enabled: true
-  - name: load_gsheets_data__value
+  - name: crypto_invest
     config:
       enabled: true
