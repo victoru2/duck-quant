@@ -6,4 +6,3 @@ variables.json
 *.egg-info
 logs
 __pycache__
-data

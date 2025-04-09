@@ -1,0 +1,14 @@
+version: 2
+sources:
+- name: landing_zone
+  database: database
+  schema: raw_data
+  config:
+    enabled: true
+  tables:
+  - name: load_gsheets_data
+    config:
+      enabled: true
+  - name: load_gsheets_data__value
+    config:
+      enabled: true
