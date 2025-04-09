@@ -8,7 +8,7 @@ A modern data pipeline for extracting Google Sheets data, transforming with Duck
 
 | Component       | Description                          | Badge |
 |-----------------|--------------------------------------|-------|
-| **Extract**     | `dlt` + Google Sheets API            | [![dlt](https://img.shields.io/badge/dlt-FF6B6B?style=flat-square&logo=python&logoColor=white)](https://dlthub.com) |
+| **Extract**     | Google Sheets API (v4)               | [![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=flat-square&logo=google-sheets&logoColor=white)](https://developers.google.com/sheets/api)
 | **Load**        | DuckDB embedded OLAP                 | [![DuckDB](https://img.shields.io/badge/DuckDB-FFF056?style=flat-square&logo=duckdb&logoColor=black)](https://duckdb.org) |
 | **Transform**   | dbt with DuckDB adapter              | [![dbt](https://img.shields.io/badge/dbt-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://docs.getdbt.com) |
 
