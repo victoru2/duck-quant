@@ -1,0 +1,13 @@
+duck_quant:
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ '../' ~ env_var('DATABASE_PATH') }}"
+      threads: 1
+
+    prod:
+      type: duckdb
+      path: "{{ '../' ~ env_var('DATABASE_PATH') }}"
+      threads: 4
+
+  target: dev
