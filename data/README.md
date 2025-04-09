@@ -25,9 +25,3 @@ Navigation Path: APIs & Services > Credentials > + CREATE CREDENTIALS > Service 
 1. Open target Google Sheet
 2. Click Share → Add service account email (from JSON's client_email)
 3. Set permission level: Reader
-
-### **6. Run Extraction**
-```bash
-export DUCKDB_PATH="../data/database.duckdb"
-python gsheets.py '{"id":"my-id", "range":"range!A:O"}'
-```

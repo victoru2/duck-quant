@@ -4,13 +4,12 @@ version = "0.1.0"
 description = "Data pipeline with Google Sheets, DuckDB, etc."
 requires-python = ">=3.10,<3.12"
 
-# Dependencias
+# Dependencies
 dependencies = ["pandas"]
 
-# Grupos de dependencias
+# Dependency groups
 [project.optional-dependencies]
 extract = [
-    "dlt",
     "google-api-python-client",
     "google-auth-oauthlib",
     "requests",
@@ -30,4 +29,8 @@ visualization = [
 dev = [  # Desarrollo y testing
     "pytest",
     "black",
+    "pre-commit"
 ]
+
+[tool.setuptools]
+packages = ["data", "orchestration", "transformation"]
