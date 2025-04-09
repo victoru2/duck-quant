@@ -20,7 +20,7 @@ SELECT
     END AS fee,
     NULLIF(TRIM(fee_coin), '') AS fee_coin,
     NULLIF(TRIM(tx_id), '') AS tx_id,
-    LOWER(TRIM(type)) AS transaction_type,
+    LOWER(TRIM(transaction_type)) AS transaction_type,
     LOWER(TRIM(exchange)) AS exchange_name
 FROM 
     {{ ref('gsheets_crypto_invest_raw') }}

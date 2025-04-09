@@ -33,4 +33,4 @@ dev = [  # Desarrollo y testing
 ]
 
 [tool.setuptools]
-packages = ["data", "orchestration", "transformation"]
+packages = ["orchestration"]
