@@ -7,6 +7,7 @@ import duckdb
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from pathlib import Path
+import json
 
 logger = LoggingMixin().log
 
@@ -16,15 +17,23 @@ DUCKDB_PATH = BASE_DIR / "data" / "database.duckdb"
 
 SHEET_VARS = [
     "CRYPTO_INVEST",
+    "EXPENSE",
 ]
 
-
-def save_to_duckdb(data: list[dict], table_name: str):
-    df = pd.DataFrame(data)
+def save_to_duckdb(df: pd.DataFrame, table_name: str):
     con = duckdb.connect(str(DUCKDB_PATH))
+    
+    for col in df.columns:
+        if df[col].astype(str).str.startswith('{').any():
+            try:
+                df[col] = df[col].apply(lambda x: json.loads(x) if pd.notnull(x) and isinstance(x, str) else None)
+            except (ValueError, TypeError):
+                pass
+    
     con.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM df")
+    
     logger.info(f"💾 Saved {len(df)} rows to DuckDB table '{table_name}'")
-
+    con.close()
 
 def create_dag(dag_id, var_key):
     @dag(
@@ -60,14 +69,24 @@ def create_dag(dag_id, var_key):
                     spreadsheetId=sheet_id, range=sheet_range
                 ).execute()
                 values = result.get("values", [])
+                
                 if not values:
                     raise Exception("🕳️ Sheet returned no data.")
 
-                df = pd.DataFrame(values[1:], columns=values[0])
+                headers = values[0]
+                data = values[1:]
+                
+                headers = [
+                    f"col_{i}" if headers[:i].count(col) > 0 else col
+                    for i, col in enumerate(headers)
+                ]
+                
+                df = pd.DataFrame(data, columns=headers)
+
                 logger.info("✅ Data extracted successfully.")
-                table_name = dag_id.replace("-", "_")
-                table_name = table_name.replace("sheet_to_duckdb_", "")
-                save_to_duckdb(df.to_dict(orient="records"), table_name)
+                table_name = dag_id.replace("-", "_").replace("sheet_to_duckdb_", "")
+                
+                save_to_duckdb(df, table_name)
 
             except Exception as e:
                 logger.error(
@@ -79,7 +98,6 @@ def create_dag(dag_id, var_key):
         extract_sheet_data()
 
     return _inner_dag()
-
 
 for var_key in SHEET_VARS:
     dag_suffix = var_key.lower()
