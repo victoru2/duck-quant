@@ -23,9 +23,6 @@ orchestrate = [
     "apache-airflow",
     "astronomer-cosmos",
 ]
-visualization = [
-    "apache-superset",
-]
 dev = [  # Desarrollo y testing
     "pytest",
     "black",
