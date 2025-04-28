@@ -19,9 +19,6 @@ transform = [
     "dbt-core",
     "dbt-duckdb",
 ]
-orchestrate = [
-    "astronomer-cosmos",
-]
 visualization = [
     "apache-superset",
 ]
