@@ -10,3 +10,6 @@ repos:
     -   id: check-added-large-files
     -   id: check-toml
     -   id: check-json
+-   repo: https://gitlab.com/pycqa/flake8
+    hooks:
+    -   id: flake8
