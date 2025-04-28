@@ -1,14 +1,14 @@
 """
 # 📊 Google Sheets → DuckDB ELT Pipeline
 
-## 📌 Overview  
-Dynamically generated DAGs that:  
-- Extract data from Google Sheets  
-- Transform headers/JSON fields  
-- Load into DuckDB tables  
+## 📌 Overview
+Dynamically generated DAGs that:
+- Extract data from Google Sheets
+- Transform headers/JSON fields
+- Load into DuckDB tables
 
-## ⚙️ Configuration  
-**Airflow Variables Required** (set as JSON):  
+## ⚙️ Configuration
+**Airflow Variables Required** (set as JSON):
 
 ```json
 {
@@ -23,30 +23,34 @@ Dynamically generated DAGs that:
 }
 ```
 
-## 🔄 Data Flow  
-1. **Extract**  
-   - Google Sheets API authentication  
-   - Data fetch from specified range  
-2. **Transform**  
-   - Duplicate header handling (e.g., `col_1`, `col_2`)  
-   - JSON auto-parsing (`{"key":value}` → dict)  
-3. **Load**  
-   - DuckDB table creation/replacement  
+## 🔄 Data Flow
+1. **Extract**
+   - Google Sheets API authentication.
+   [(Setup)](https://github.com/victoru2/duck-quant/blob/main/data/README.md#-google-sheets-api-credentials-setup)
+   - Data fetch from specified range
+2. **Transform**
+   - Duplicate header handling (e.g., `col_1`, `col_2`)
+   - JSON auto-parsing (`{"key":value}` → dict)
+3. **Load**
+   - DuckDB table creation/replacement
 
 
 ---
 
 ## 🚨 TROUBLESHOOTING
 
-```
-| Error                | Fix Steps                              | Prevention                          |
-|----------------------|----------------------------------------|-------------------------------------|
-| `No Data`            | Check range syntax - Verify Sheet ID   | ✅ Test range in Sheets UI          |
-| `Permission Denied`  | Re-share Sheet - Rotate credentials    | 🔑 Pre-authorize service account    |
-```
-   
+Errors and recommended actions:
+
+- No Data:
+    - Fix: Check range syntax and verify the Sheet ID.
+    - Prevention: Test the range directly in the Google Sheets UI.
+
+- Permission Denied:
+    - Fix: Re-share the Sheet or rotate the credentials.
+    - Prevention: Pre-authorize the service account key.
+
 ---
-**Technical Specs** 
+**Technical Specs**
 - **DuckDB Path**: `/data/database.duckdb`
 
 """
@@ -93,7 +97,11 @@ def save_to_duckdb(df: pd.DataFrame, table_name: str) -> None:
     for col in df.columns:
         if df[col].astype(str).str.startswith('{').any():
             try:
-                df[col] = df[col].apply(lambda x: json.loads(x) if pd.notnull(x) and isinstance(x, str) else None)
+                df[col] = df[col].apply(
+                    lambda x: json.loads(x)
+                    if pd.notnull(x) and isinstance(x, str)
+                    else None
+                )
             except (ValueError, TypeError):
                 pass
 
@@ -125,28 +133,28 @@ def create_dag(dag_id: str, var_key: str):
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
-        tags=["ELT", "google_sheets", "duckdb"], 
+        tags=["ELT", "google_sheets", "duckdb"],
         doc_md=__doc__  # Inherits module docstring
     )
     def _inner_dag():
         """Google Sheet to DuckDB ETL Pipeline.
-        
-        This DAG extracts data from a configured Google Sheet, handles duplicate
-        column headers, processes JSON-formatted columns, and loads the data
-        into DuckDB.
+
+        This DAG extracts data from a configured Google Sheet, handles
+        duplicate column headers, processes JSON-formatted columns, and
+        loads the data into DuckDB.
         """
 
         @task()
         def extract_sheet_data():
             """Extract data from Google Sheets and load into DuckDB.
-            
+
             Performs the following operations:
             1. Retrieves sheet configuration from Airflow Variables
             2. Authenticates with Google Sheets API
             3. Extracts data from specified range
             4. Processes headers to ensure uniqueness
             5. Saves data to DuckDB
-            
+
             Raises:
                 Exception: If sheet returns no data or extraction fails
             """
@@ -168,30 +176,31 @@ def create_dag(dag_id: str, var_key: str):
                     ]
                 )
                 service = build("sheets", "v4", credentials=creds)
-                
+
                 # API request
                 result = service.spreadsheets().values().get(
                     spreadsheetId=sheet_id, range=sheet_range
                 ).execute()
                 values = result.get("values", [])
-                
+
                 if not values:
                     raise Exception("🕳️ Sheet returned no data.")
 
                 # Process headers to handle duplicates
                 headers = values[0]
                 data = values[1:]
-                
+
                 headers = [
                     f"col_{i}" if headers[:i].count(col) > 0 else col
                     for i, col in enumerate(headers)
                 ]
-                
+
                 df = pd.DataFrame(data, columns=headers)
 
                 logger.info("✅ Data extracted successfully.")
-                table_name = dag_id.replace("-", "_").replace("sheet_to_duckdb_", "")
-                
+                table_name = dag_id.replace("-", "_")
+                table_name = table_name.replace("sheet_to_duckdb_", "")
+
                 save_to_duckdb(df, table_name)
 
             except Exception as e:
