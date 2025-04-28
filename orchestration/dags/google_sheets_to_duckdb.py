@@ -125,7 +125,7 @@ def create_dag(dag_id: str, var_key: str):
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
-        tags=["ELT", "google_sheets", "duckdb"],
+        tags=["ELT", "google_sheets", "duckdb"], 
         doc_md=__doc__  # Inherits module docstring
     )
     def _inner_dag():
