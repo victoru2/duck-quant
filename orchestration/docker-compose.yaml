@@ -49,7 +49,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider distributions you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.5}
+  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.0.0}
   build:
     context: .
     dockerfile: Dockerfile
@@ -74,10 +74,11 @@ x-airflow-common:
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    PYTHONPATH: /opt/airflow
     # The following line can be used to set a custom config file, stored in the local config folder
-    # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    AIRFLOW__API_AUTH__JWT_SECRET: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"  # <-- Usa tu JWT secret generado
+    AIRFLOW__API_AUTH__JWT_ALGORITHM: "HS256"
+    AIRFLOW__WEBSERVER__SECRET_KEY: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"  # <-- Puedes reusar JWT_SECRET o generar otra
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -258,8 +259,8 @@ services:
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
           echo
         fi
-        mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        mkdir -p /opts/airflow/{logs,dags,plugins,config}
+        chown -R "${AIRFLOW_UID}:0" /opts/airflow/{logs,dags,plugins,config}
         exec /entrypoint airflow version
     # yamllint enable rule:line-length
     environment:
@@ -270,8 +271,6 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
-    volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}:/sources
 
   airflow-cli:
     <<: *airflow-common

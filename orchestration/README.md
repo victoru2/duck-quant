@@ -33,8 +33,9 @@ airflow users create \
   --lastname Apache \
   --role Admin \
   --email admin@example.com
-```
+
 You'll be prompted to enter a password for the new user.
+```
 
 3. Type `exit` to leave the container shell.
 
