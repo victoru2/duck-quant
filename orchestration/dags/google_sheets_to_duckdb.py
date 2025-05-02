@@ -29,8 +29,8 @@ Dynamically generated DAGs that:
    [(Setup)](https://github.com/victoru2/duck-quant/blob/main/data/README.md#-google-sheets-api-credentials-setup)
    - Data fetch from specified range
 2. **Transform**
-   - Duplicate header handling (e.g., `col_1`, `col_2`)
-   - JSON auto-parsing (`{"key":value}` → dict)
+   - Duplicate header handling (e.g., col_1, col_2)
+   - JSON auto-parsing ({"key":value} → dict)
 3. **Load**
    - DuckDB table creation/replacement
 
@@ -56,8 +56,7 @@ Errors and recommended actions:
 """
 
 from airflow.decorators import dag, task
-from airflow.models import Variable
-from airflow.utils.log.logging_mixin import LoggingMixin
+from airflow.sdk import Variable
 from datetime import datetime
 import pandas as pd
 import duckdb
@@ -65,8 +64,9 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from pathlib import Path
 import json
+import logging
 
-logger = LoggingMixin().log
+logger = logging.getLogger(__name__)
 
 # Path configurations
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -129,7 +129,7 @@ def create_dag(dag_id: str, var_key: str):
     """
     @dag(
         dag_id=dag_id,
-        schedule_interval="@daily",
+        schedule="@daily",
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
@@ -160,6 +160,16 @@ def create_dag(dag_id: str, var_key: str):
             """
             try:
                 sheet_config = Variable.get(var_key, deserialize_json=True)
+                if isinstance(sheet_config, str):
+                    try:
+                        sheet_config = json.loads(sheet_config)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse sheet config: {e}")
+                        raise
+                if not all(key in sheet_config for key in ["id", "range"]):
+                    raise ValueError(
+                        f"Invalid sheet config structure for {var_key}"
+                    )
                 sheet_id = sheet_config["id"]
                 sheet_range = sheet_config["range"]
 
