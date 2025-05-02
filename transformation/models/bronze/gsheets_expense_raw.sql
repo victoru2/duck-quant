@@ -3,54 +3,54 @@
     schema='bronze'
 ) }}
 
-WITH card_1 AS (
-    SELECT
-        "CARD 1" AS expense_type,
-        "C1" AS amount,
-        "col_2" AS month
-    FROM
+with card_1 as (
+    select
+        "CARD 1" as expense_type,
+        c1 as amount,
+        col_2 as period_month
+    from
         {{ source('landing_zone', 'expense') }}
-    WHERE
+    where
         expense_type <> 'expense type'
 ),
 
-card_2 AS (
-    SELECT
-        "CARD 2" AS expense_type,
-        "col_4" AS amount,
-        "col_5" AS month
-    FROM
+card_2 as (
+    select
+        "CARD 2" as expense_type,
+        col_4 as amount,
+        col_5 as period_month
+    from
         {{ source('landing_zone', 'expense') }}
-    WHERE
+    where
         expense_type <> 'expense type'
 ),
 
-card_3 AS (
-    SELECT
-        "CARD 3" AS expense_type,
-        "col_7" AS amount,
-        "col_8" AS month
-    FROM
+card_3 as (
+    select
+        "CARD 3" as expense_type,
+        col_7 as amount,
+        col_8 as period_month
+    from
         {{ source('landing_zone', 'expense') }}
-    WHERE
+    where
         expense_type <> 'expense type'
 ),
 
-cash AS (
-    SELECT
-        "CASH" AS expense_type,
-        "col_10" AS amount,
-        "col_11" AS month
-    FROM
+cash as (
+    select
+        cash as expense_type,
+        col_10 as amount,
+        col_11 as period_month
+    from
         {{ source('landing_zone', 'expense') }}
-    WHERE
+    where
         expense_type <> 'expense type'
 )
 
-SELECT * FROM card_1
-UNION
-SELECT * FROM card_2
-UNION
-SELECT * FROM card_3
-UNION
-SELECT * FROM cash
+select * from card_1
+union
+select * from card_2
+union
+select * from card_3
+union
+select * from cash

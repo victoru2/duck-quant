@@ -3,15 +3,22 @@
     schema='silver'
 ) }}
 
-SELECT
+select
     expense_type,
-    CASE
-        WHEN amount = '' OR amount IS NULL THEN NULL
-        ELSE ABS(CAST(REPLACE(REPLACE(amount, '.', ''), ',', '.') AS DECIMAL(20, 8)))
-    END AS amount,
-    CASE
-        WHEN month = '' OR month IS NULL THEN NULL
-        ELSE month::INT
-    END AS month
-FROM
+    case
+        when amount = '' or amount is null then null
+        else
+            ABS(
+                CAST(
+                    REPLACE(REPLACE(amount, '.', ''), ',', '.') as DECIMAL(
+                        20, 8
+                    )
+                )
+            )
+    end as amount,
+    case
+        when period_month = '' or period_month is null then null
+        else CAST(period_month as INT)
+    end as period_month
+from
     {{ ref('gsheets_expense_raw') }}

@@ -3,35 +3,34 @@
     schema='gold'
 ) }}
 
-WITH expenses AS (
-    SELECT
+with expenses as (
+    select
         expense_type,
         amount,
-        month
-    FROM {{ ref('gsheets_expense') }}
-    WHERE month <= 12
+        period_month
+    from {{ ref('gsheets_expense') }}
+    where period_month <= 12
 ),
 
-monthly_total AS (
-    SELECT
-        month,
-        SUM(amount) AS total_amount
-    FROM expenses
-    GROUP BY month
+monthly_total as (
+    select
+        period_month,
+        SUM(amount) as total_amount
+    from expenses
+    group by 1
 ),
 
-summary AS (
-    SELECT
-        e.month,
+summary as (
+    select
+        e.period_month,
         e.expense_type,
-        SUM(e.amount) AS total_by_category,
         mt.total_amount,
-        ROUND(100 * SUM(e.amount) / mt.total_amount, 2) AS percent_of_month
-    FROM expenses e
-    JOIN monthly_total mt
-        ON e.month = mt.month
-    GROUP BY e.month, e.expense_type, mt.total_amount
+        SUM(e.amount) as total_by_category,
+        ROUND(100 * SUM(e.amount) / mt.total_amount, 2) as percent_of_month
+    from expenses as e
+    inner join monthly_total as mt
+        on e.period_month = mt.period_month
+    group by 1, 2, 3
 )
 
-SELECT * FROM summary
-ORDER BY month, percent_of_month DESC
+select * from summary
