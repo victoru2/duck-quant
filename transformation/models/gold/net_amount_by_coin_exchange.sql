@@ -6,8 +6,8 @@
 select
     coin,
     exchange_name,
-    SUM(net_amount) as net_amount,
-    COUNT(*) as transaction_count
+    sum(net_amount) as net_amount,
+    count(*) as transaction_count
 from
     {{ ref('net_amount_per_transaction') }}
 group by 1, 2
