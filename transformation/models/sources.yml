@@ -9,3 +9,6 @@ sources:
   - name: crypto_invest
     config:
       enabled: true
+  - name: expense
+    config:
+      enabled: true
