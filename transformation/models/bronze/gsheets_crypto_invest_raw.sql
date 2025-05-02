@@ -3,25 +3,25 @@
     schema='bronze'
 ) }}
 
-SELECT
+select
     date,
     coin,
-    "usd price" AS usd_price,
-    amount, 
+    "usd price" as usd_price,
+    amount,
     fee,
-    "fee coin" AS fee_coin,
-    "tx id" AS tx_id,
-    "total amount" AS total_amount, 
-    "fiat amount" AS fiat_amount, 
-    "fiat price" AS fiat_price, 
-    "fiat currency" AS fiat_currency, 
-    "type" AS transaction_type, 
-    exchange, 
-    total, 
+    "fee coin" as fee_coin,
+    "tx id" as tx_id,
+    "total amount" as total_amount,
+    "fiat amount" as fiat_amount,
+    "fiat price" as fiat_price,
+    "fiat currency" as fiat_currency,
+    type as transaction_type,
+    exchange,
+    total,
     notes
-FROM 
+from
     {{ source('landing_zone', 'crypto_invest') }}
-WHERE
+where
     coin <> 'coin'
-    AND coin IS NOT NULL
-    AND coin <> ''
+    and coin is not null
+    and coin <> ''

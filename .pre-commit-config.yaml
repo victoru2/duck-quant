@@ -14,3 +14,14 @@ repos:
     rev: 6b6f3d5fefecc994a06f425c18c3cddc9b71e4a4
     hooks:
     -   id: flake8
+-   repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.0
+    hooks:
+      - id: sqlfluff-fix
+        name: SQLFluff (autofix)
+        additional_dependencies:
+          - "sqlfluff-templater-dbt==3.4.0"
+          - "dbt-duckdb==1.9.3"
+          - "duckdb"
+        args: [--dialect=duckdb]
+        files: "transformation/models/.*\\.sql$"
