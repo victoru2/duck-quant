@@ -8,9 +8,9 @@ select
     case
         when amount = '' or amount is null then null
         else
-            ABS(
-                CAST(
-                    REPLACE(REPLACE(amount, '.', ''), ',', '.') as DECIMAL(
+            abs(
+                cast(
+                    replace(replace(amount, '.', ''), ',', '.') as DECIMAL(
                         20, 8
                     )
                 )
@@ -18,7 +18,7 @@ select
     end as amount,
     case
         when period_month = '' or period_month is null then null
-        else CAST(period_month as INT)
+        else cast(period_month as INT)
     end as period_month
 from
     {{ ref('gsheets_expense_raw') }}

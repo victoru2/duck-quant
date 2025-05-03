@@ -23,5 +23,4 @@ repos:
           - "sqlfluff-templater-dbt==3.4.0"
           - "dbt-duckdb==1.9.3"
           - "duckdb"
-        args: [--dialect=duckdb]
         files: "transformation/models/.*\\.sql$"
