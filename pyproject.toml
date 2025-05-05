@@ -19,9 +19,6 @@ transform = [
     "dbt-core",
     "dbt-duckdb",
 ]
-visualization = [
-    "apache-superset",
-]
 dev = [  # Desarrollo y testing
     "pytest",
     "black",

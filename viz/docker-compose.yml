@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis_data:/data
+
+  superset:
+    build: .
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "uGen90egOIQbLXbz/QQEWOHzJ3zs4hM2hxR/iBiwH8DdRSqpMLELApJm"
+      SUPERSET_ENV: development
+      SUPERSET_DB_HOST: postgres
+      SUPERSET_DB_PORT: 5432
+      SUPERSET_DB_USER: superset
+      SUPERSET_DB_PASSWORD: superset
+      SUPERSET_DB_NAME: superset
+      SUPERSET_REDIS_HOST: redis
+      SUPERSET_ADMIN_USERNAME: admin
+      SUPERSET_ADMIN_PASSWORD: admin
+      SUPERSET_ADMIN_FIRST_NAME: Admin
+      SUPERSET_ADMIN_LAST_NAME: User
+      SUPERSET_ADMIN_EMAIL: admin@example.com
+      SUPERSET_LOAD_EXAMPLES: "yes"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - superset_data:/app/superset_home
+      - ../data:/app/data
+      - ./superset_exports:/app/superset_exports
+
+volumes:
+  postgres_data:
+  redis_data:
+  superset_data:
