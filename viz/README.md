@@ -2,15 +2,15 @@
 
 This guide explains how to set up Apache Superset using Docker and connect it to a local DuckDB database.
 
-## 1. Generate a Secret Key
+<!-- ## Generate a Secret Key
 
 Run the following command to generate a secret key (used by Superset for session management):
 
 ```bash
 openssl rand -base64 42
-```
+``` -->
 
-## 2. Start Superset with Docker Compose
+## Start Superset with Docker Compose
 
 Start the Superset services in detached mode:
 
@@ -18,7 +18,7 @@ Start the Superset services in detached mode:
 docker-compose up -d
 ```
 
-## 3. Run Database Migrations
+## Run Database Migrations
 
 Apply database migrations inside the Superset container:
 
@@ -26,7 +26,7 @@ Apply database migrations inside the Superset container:
 docker-compose exec superset superset db upgrade
 ```
 
-## 4. Create an Admin User
+## Create an Admin User
 
 Create your admin account with the following command:
 
@@ -39,7 +39,7 @@ docker-compose exec superset superset fab create-admin \
   --password my_password
 ```
 
-## 5. Initialize Superset
+## Initialize Superset
 
 Run the initial setup to prepare Superset:
 
@@ -47,13 +47,13 @@ Run the initial setup to prepare Superset:
 docker-compose exec superset superset init
 ```
 
-## 6. Access the Superset UI
+## Access the Superset UI
 
 You can now access Superset in your browser at:
 
 [http://localhost:8088](http://localhost:8088)
 
-## 7. Connect to DuckDB
+## Connect to DuckDB
 
 To connect to a DuckDB database located inside your container:
 
