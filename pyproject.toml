@@ -19,9 +19,8 @@ transform = [
     "dbt-core",
     "dbt-duckdb",
 ]
-orchestrate = [
-    "apache-airflow",
-    "astronomer-cosmos",
+visualization = [
+    "apache-superset",
 ]
 dev = [  # Desarrollo y testing
     "pytest",

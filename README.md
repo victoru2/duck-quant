@@ -39,8 +39,15 @@ uv venv
 source .venv/bin/activate  # Linux/Mac
 
 # Install dependencies (choose one)
-uv pip install -e ".[extract]"              # Minimal (extraction only)
-uv pip install -e ".[extract,transform]"    # Extraction + transformation
-uv pip install -e ".[all]"                  # Full setup (including Airflow/Superset)
-uv pip sync pyproject.toml                  # Sync environment (clean up unused packages)
+uv pip install -e ".[extract]"          # Minimal (extraction only)
+uv pip install -e ".[extract,transform]" # Extraction + transformation
+```
+
+### 🔍 Dependency Inspection
+```bash
+# List all installed packages with versions
+uv pip list
+
+# Filter for key packages
+uv pip list | grep -E 'dbt|sqlfluff|duckdb'
 ```
