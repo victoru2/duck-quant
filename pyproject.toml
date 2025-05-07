@@ -19,7 +19,7 @@ transform = [
     "dbt-core",
     "dbt-duckdb",
 ]
-dev = [  # Desarrollo y testing
+dev = [
     "pytest",
     "black",
     "pre-commit"
