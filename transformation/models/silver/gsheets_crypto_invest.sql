@@ -1,6 +1,7 @@
 {{ config(
     materialized='table',
-    schema='silver'
+    schema='silver',
+    tags=['crypto_invest']
 ) }}
 
 select

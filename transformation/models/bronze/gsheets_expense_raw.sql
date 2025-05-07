@@ -1,6 +1,7 @@
 {{ config(
     materialized='table',
-    schema='bronze'
+    schema='bronze',
+    tags=['expense']
 ) }}
 
 with card_1 as (
