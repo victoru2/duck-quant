@@ -57,7 +57,7 @@ Errors and recommended actions:
 
 from airflow.decorators import dag, task
 from airflow.sdk import Variable
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import duckdb
 from google.oauth2 import service_account
@@ -78,6 +78,12 @@ SHEET_VARS = [
     "CRYPTO_INVEST",
     "EXPENSE",
 ]
+
+default_args = {
+    "owner": "victor",
+    "retries": 3,
+    "retry_delay": timedelta(minutes=2)
+}
 
 
 def save_to_duckdb(df: pd.DataFrame, table_name: str) -> None:
@@ -133,6 +139,7 @@ def create_dag(dag_id: str, var_key: str):
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
+        default_args=default_args,
         tags=["ELT", "google_sheets", "duckdb"],
         doc_md=__doc__  # Inherits module docstring
     )
