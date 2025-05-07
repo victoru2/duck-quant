@@ -18,35 +18,6 @@ Start the Superset services in detached mode:
 docker-compose up -d
 ```
 
-## Run Database Migrations
-
-Apply database migrations inside the Superset container:
-
-```bash
-docker-compose exec superset superset db upgrade
-```
-
-## Create an Admin User
-
-Create your admin account with the following command:
-
-```bash
-docker-compose exec superset superset fab create-admin \
-  --username my_user \
-  --firstname superset \
-  --lastname apache \
-  --email superset@example.com \
-  --password my_password
-```
-
-## Initialize Superset
-
-Run the initial setup to prepare Superset:
-
-```bash
-docker-compose exec superset superset init
-```
-
 ## Access the Superset UI
 
 You can now access Superset in your browser at:
