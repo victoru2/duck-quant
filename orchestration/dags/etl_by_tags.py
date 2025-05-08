@@ -1,10 +1,9 @@
 import os
-from datetime import datetime, timedelta
+from resources import RESOURCE_LIST
 from pathlib import Path
+from datetime import datetime, timedelta
 
 from airflow.decorators import dag
-from airflow.operators.empty import EmptyOperator
-
 from cosmos import (
     DbtTaskGroup,
     ExecutionConfig,
@@ -14,9 +13,6 @@ from cosmos import (
 )
 from cosmos.profiles import DuckDBUserPasswordProfileMapping
 
-# ----------------------
-# Configuración DAG
-# ----------------------
 default_args = {
     "owner": "victor",
     "retries": 2,
@@ -26,81 +22,41 @@ default_args = {
 
 
 def get_dbt_root_path():
-    default_dbt_root_path = Path(__file__).parent / "dbt"
-    return Path(os.getenv("DBT_ROOT_PATH", default_dbt_root_path))
+    default_path = Path(__file__).parent / "dbt"
+    return Path(os.getenv("DBT_ROOT_PATH", default_path))
 
 
-# ----------------------
-# Crear ProfileConfig usando conexión Airflow + Mapping
-# ----------------------
-def create_profile_config(profile_name: str, target_name: str):
+def create_profile_config():
     return ProfileConfig(
-        profile_name=profile_name,
-        target_name=target_name,
+        profile_name="duck_quant",
+        target_name=os.getenv("ENVIRONMENT", "dev"),
         profile_mapping=DuckDBUserPasswordProfileMapping(
             conn_id="duckdb_conn",
-            profile_args={
-                "path": "/opt/airflow/dags/data/database.duckdb"
-            }
+            profile_args={"path": "/opt/airflow/dags/data/database.duckdb"}
         )
     )
 
 
-# ----------------------
-# Crear Task Group por tag
-# ----------------------
-def create_dbt_task_group(group_id: str,
-                          profile_name: str,
-                          target_name: str,
-                          project_config: ProjectConfig,
-                          tag: str):
-    return DbtTaskGroup(
-        group_id=group_id,
-        project_config=project_config,
-        profile_config=create_profile_config(profile_name, target_name),
-        execution_config=ExecutionConfig(
-            dbt_executable_path="dbt"
-        ),
-        render_config=RenderConfig(
-            select=[f"tag:{tag}"],
-        )
+def build_dbt_dag(tag: str):
+    @dag(
+        dag_id=f"dbt_by_tag__{tag}",
+        schedule=None,
+        start_date=datetime(2024, 2, 23),
+        catchup=False,
+        default_args=default_args,
+        tags=["ETL", "dbt", tag]
     )
-
-
-# ----------------------
-# DAG principal
-# ----------------------
-@dag(
-    dag_id="dbt_airflow_by_tags",
-    schedule=timedelta(minutes=5),
-    start_date=datetime(2024, 2, 23),
-    catchup=False,
-    max_active_runs=1,
-    default_args=default_args,
-    tags=["ETL", "DBT", "Cosmos"]
-)
-def dbt_iceberg_dag():
-
-    start_task = EmptyOperator(task_id="start")
-
-    task_groups = ["expense", "crypto_invest"]
-    tasks = {}
-    environment = os.getenv("ENVIRONMENT", "dev")
-
-    project_config = ProjectConfig(
-        dbt_project_path=get_dbt_root_path(),
-    )
-
-    for group in task_groups:
-        tasks[group] = create_dbt_task_group(
-            group_id=f"{group}_models",
-            profile_name="duck_quant",
-            target_name=environment,
-            project_config=project_config,
-            tag=group
+    def _dag():
+        DbtTaskGroup(
+            group_id=f"{tag}_models",
+            project_config=ProjectConfig(dbt_project_path=get_dbt_root_path()),
+            profile_config=create_profile_config(),
+            execution_config=ExecutionConfig(dbt_executable_path="dbt"),
+            render_config=RenderConfig(select=[f"tag:{tag}"])
         )
+    return _dag()
 
-    start_task >> list(tasks.values())
 
-
-dbt_iceberg_dag = dbt_iceberg_dag()
+# Dynamically generate DAGs for each Tag
+for _tag in RESOURCE_LIST:
+    globals()[f"dbt_by_tag__{_tag}"] = build_dbt_dag(_tag)

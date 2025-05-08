@@ -57,6 +57,9 @@ Errors and recommended actions:
 
 from airflow.decorators import dag, task
 from airflow.sdk import Variable
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
+from resources import RESOURCE_LIST
 from datetime import datetime, timedelta
 import pandas as pd
 import duckdb
@@ -73,11 +76,6 @@ BASE_DIR = Path(__file__).parent
 CREDENTIALS_PATH = BASE_DIR / "data" / "duck-quant.json"
 DUCKDB_PATH = BASE_DIR / "data" / "database.duckdb"
 
-# List of Airflow Variable keys containing Google Sheets configurations
-SHEET_VARS = [
-    "CRYPTO_INVEST",
-    "EXPENSE",
-]
 
 default_args = {
     "owner": "victor",
@@ -135,7 +133,7 @@ def create_dag(dag_id: str, var_key: str):
     """
     @dag(
         dag_id=dag_id,
-        schedule="@daily",
+        schedule=None,
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
@@ -216,7 +214,7 @@ def create_dag(dag_id: str, var_key: str):
 
                 logger.info("✅ Data extracted successfully.")
                 table_name = dag_id.replace("-", "_")
-                table_name = table_name.replace("sheet_to_duckdb_", "")
+                table_name = table_name.replace("sheet_to_duckdb__", "")
 
                 save_to_duckdb(df, table_name)
 
@@ -227,13 +225,26 @@ def create_dag(dag_id: str, var_key: str):
                 )
                 raise
 
-        extract_sheet_data()
+        extract_task = extract_sheet_data()
+
+        tag_suffix = var_key
+        target_dag_id = f"dbt_by_tag__{tag_suffix}"
+
+        trigger_dbt_dag = TriggerDagRunOperator(
+            task_id=f"trigger_dbt_{tag_suffix}",
+            trigger_dag_id=target_dag_id,
+            wait_for_completion=False,
+            reset_dag_run=True,
+            conf={"triggered_by": dag_id}
+        )
+
+        extract_task >> trigger_dbt_dag
 
     return _inner_dag()
 
 
 # Dynamically generate DAGs for each sheet configuration
-for var_key in SHEET_VARS:
-    dag_suffix = var_key.lower()
-    dag_id = f"sheet_to_duckdb_{dag_suffix}"
+for var_key in RESOURCE_LIST:
+    dag_suffix = var_key
+    dag_id = f"sheet_to_duckdb__{dag_suffix}"
     globals()[dag_id] = create_dag(dag_id, var_key)
