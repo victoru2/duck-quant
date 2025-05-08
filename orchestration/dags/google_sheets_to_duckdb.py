@@ -69,7 +69,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Path configurations
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).parent
 CREDENTIALS_PATH = BASE_DIR / "data" / "duck-quant.json"
 DUCKDB_PATH = BASE_DIR / "data" / "database.duckdb"
 
@@ -151,7 +151,7 @@ def create_dag(dag_id: str, var_key: str):
         loads the data into DuckDB.
         """
 
-        @task()
+        @task(pool="duckdb_pool")
         def extract_sheet_data():
             """Extract data from Google Sheets and load into DuckDB.
 

@@ -18,18 +18,6 @@ This command validates that the dbt configuration (connection, profiles, and env
 
 ## Run dbt models
 
-### Important: Specify the `country` parameter
-
-The country parameter is required to dynamically define schemas and paths specific to each country.
-
-Always include this parameter in your dbt executions to ensure the models run for the desired country.
-
-To pass the country parameter, use the `--vars` flag like this:
-```sh
-dbt run
-```
-Replace **`col`** with the country code you want to process (e.g., **`arg`** for Argentina).
-
 ### Run all models:
 ```sh
 dbt run
@@ -41,14 +29,14 @@ To execute a specific `.sql` model, provide the model name (**without** the `.sq
 dbt run --select model_name
 ```
 
-### Run models with a specific tag (e.g., tracking)
+### Run models with a specific tag (e.g., expense)
 ```sh
-dbt run --select tag:tracking
+dbt run --select tag:expense
 ```
 
 ### Run models at a specific level (e.g., bronze) with a specific profile and target environment
 ```sh
-dbt run --select bronze --profile mailamericas --target prod
+dbt run --select bronze --profile duck_quant --target prod
 ```
 
 ### Materialize seeds

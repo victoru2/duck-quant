@@ -73,18 +73,19 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    # _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
-    AIRFLOW__API_AUTH__JWT_SECRET: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"  # <-- Usa tu JWT secret generado
+    AIRFLOW__API_AUTH__JWT_SECRET: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"
     AIRFLOW__API_AUTH__JWT_ALGORITHM: "HS256"
-    AIRFLOW__WEBSERVER__SECRET_KEY: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"  # <-- Puedes reusar JWT_SECRET o generar otra
+    AIRFLOW__WEBSERVER__SECRET_KEY: "a49c3a0fd8719392fe01203a200c04e396e8f1a91bd8f027c14700710000cb35"
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ../data:/opt/airflow/data
+    - ../data:/opt/airflow/dags/data
+    - ../transformation:/opt/airflow/dags/dbt
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -271,6 +272,23 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
+
+  airflow-pool-init:
+    <<: *airflow-common
+    command: >
+      bash -c '
+        if ! airflow pools list | grep -q "high_priority"; then
+          echo "Importando pools...";
+          airflow pools import /opt/airflow/config/pools.json;
+        else
+          echo "Los pools ya existen.";
+        fi'
+    volumes:
+      - ./config/pools.json:/opt/airflow/config/pools.json  # Monta el archivo de pools
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-cli:
     <<: *airflow-common
