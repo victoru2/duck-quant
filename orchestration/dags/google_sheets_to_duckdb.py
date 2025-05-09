@@ -60,6 +60,8 @@ from airflow.sdk import Variable
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from resources import RESOURCE_LIST
+from sensors import GoogleSheetsChangeSensor
+
 from datetime import datetime, timedelta
 import pandas as pd
 import duckdb
@@ -82,6 +84,40 @@ default_args = {
     "retries": 3,
     "retry_delay": timedelta(minutes=2)
 }
+
+
+def get_sheet_config(var_key: str) -> tuple[str, str]:
+    """
+    Retrieve and validate a Google Sheet config from an Airflow Variable.
+
+    The variable must contain a JSON object with 'id' and 'range' keys.
+
+    Args:
+        var_key (str): Key of the Airflow Variable containing the sheet config.
+
+    Returns:
+        tuple[str, str]: A tuple with (spreadsheet_id, sheet_range).
+
+    Raises:
+        ValueError: If the content is not valid JSON or lacks required keys.
+    """
+    raw = Variable.get(var_key, deserialize_json=True)
+
+    # Handle the case where the value is still a JSON string
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse sheet config for {var_key}: {e}")
+            raise ValueError(f"Invalid JSON in Variable '{var_key}'")
+
+    if not isinstance(raw, dict) or not all(k in raw for k in ("id", "range")):
+        raise ValueError(
+            f"Invalid sheet config structure for '{var_key}': must contain "
+            "'id' and 'range'"
+        )
+
+    return raw["id"], raw["range"]
 
 
 def save_to_duckdb(df: pd.DataFrame, table_name: str) -> None:
@@ -133,7 +169,7 @@ def create_dag(dag_id: str, var_key: str):
     """
     @dag(
         dag_id=dag_id,
-        schedule=None,
+        schedule="@hourly",
         start_date=datetime(2025, 4, 9),
         catchup=False,
         max_active_runs=1,
@@ -149,6 +185,18 @@ def create_dag(dag_id: str, var_key: str):
         loads the data into DuckDB.
         """
 
+        sheet_id, sheet_range = get_sheet_config(var_key)
+
+        wait_for_change = GoogleSheetsChangeSensor(
+            task_id=f"wait_for_{var_key}",
+            spreadsheet_id=sheet_id,
+            sheet_range=sheet_range,
+            credentials_path=str(CREDENTIALS_PATH),
+            variable_key=f"LAST_HASH_{var_key}",
+            poke_interval=60,
+            timeout=60 * 60 * 24
+        )
+
         @task(pool="duckdb_pool")
         def extract_sheet_data():
             """Extract data from Google Sheets and load into DuckDB.
@@ -163,67 +211,45 @@ def create_dag(dag_id: str, var_key: str):
             Raises:
                 Exception: If sheet returns no data or extraction fails
             """
-            try:
-                sheet_config = Variable.get(var_key, deserialize_json=True)
-                if isinstance(sheet_config, str):
-                    try:
-                        sheet_config = json.loads(sheet_config)
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse sheet config: {e}")
-                        raise
-                if not all(key in sheet_config for key in ["id", "range"]):
-                    raise ValueError(
-                        f"Invalid sheet config structure for {var_key}"
-                    )
-                sheet_id = sheet_config["id"]
-                sheet_range = sheet_config["range"]
+            logger.info(
+                f"⛏️ Extracting data from Sheet var: {var_key},"
+                f" Range: {sheet_range}"
+            )
 
-                logger.info(
-                    f"⛏️ Extracting data from Sheet var: {var_key},"
-                    f" Range: {sheet_range}"
-                )
-
-                # Google Sheets API setup
-                creds = service_account.Credentials.from_service_account_file(
-                    str(CREDENTIALS_PATH),
-                    scopes=[
-                        "https://www.googleapis.com/auth/spreadsheets.readonly"
-                    ]
-                )
-                service = build("sheets", "v4", credentials=creds)
-
-                # API request
-                result = service.spreadsheets().values().get(
-                    spreadsheetId=sheet_id, range=sheet_range
-                ).execute()
-                values = result.get("values", [])
-
-                if not values:
-                    raise Exception("🕳️ Sheet returned no data.")
-
-                # Process headers to handle duplicates
-                headers = values[0]
-                data = values[1:]
-
-                headers = [
-                    f"col_{i}" if headers[:i].count(col) > 0 else col
-                    for i, col in enumerate(headers)
+            # Google Sheets API setup
+            creds = service_account.Credentials.from_service_account_file(
+                str(CREDENTIALS_PATH),
+                scopes=[
+                    "https://www.googleapis.com/auth/spreadsheets.readonly"
                 ]
+            )
+            service = build("sheets", "v4", credentials=creds)
 
-                df = pd.DataFrame(data, columns=headers)
+            # API request
+            result = service.spreadsheets().values().get(
+                spreadsheetId=sheet_id, range=sheet_range
+            ).execute()
+            values = result.get("values", [])
 
-                logger.info("✅ Data extracted successfully.")
-                table_name = dag_id.replace("-", "_")
-                table_name = table_name.replace("sheet_to_duckdb__", "")
+            if not values:
+                raise Exception("🕳️ Sheet returned no data.")
 
-                save_to_duckdb(df, table_name)
+            # Process headers to handle duplicates
+            headers = values[0]
+            data = values[1:]
 
-            except Exception as e:
-                logger.error(
-                    f"❌ [{dag_id}] Error while extracting data: {e}",
-                    exc_info=True
-                )
-                raise
+            headers = [
+                f"col_{i}" if headers[:i].count(col) > 0 else col
+                for i, col in enumerate(headers)
+            ]
+
+            df = pd.DataFrame(data, columns=headers)
+
+            logger.info("✅ Data extracted successfully.")
+            table_name = dag_id.replace("-", "_")
+            table_name = table_name.replace("sheet_to_duckdb__", "")
+
+            save_to_duckdb(df, table_name)
 
         extract_task = extract_sheet_data()
 
@@ -238,7 +264,7 @@ def create_dag(dag_id: str, var_key: str):
             conf={"triggered_by": dag_id}
         )
 
-        extract_task >> trigger_dbt_dag
+        wait_for_change >> extract_task >> trigger_dbt_dag
 
     return _inner_dag()
 
