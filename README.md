@@ -51,3 +51,18 @@ uv pip list
 # Filter for key packages
 uv pip list | grep -E 'dbt|sqlfluff|duckdb'
 ```
+
+### 🕹️ Orchestration Commands
+
+Simplify infrastructure management with these Makefile shortcuts:
+
+```bash
+# Start all services
+make up-all
+
+# Stop services while preserving data
+make down-all
+
+# Nuclear option - full cleanup (containers, volumes, images)
+make stop-all
+```

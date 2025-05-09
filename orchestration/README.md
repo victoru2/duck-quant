@@ -15,7 +15,7 @@ mkdir -p ./dags ./logs ./config
 
 ### Generate `requirements.txt` file
 ```bash
-uv pip compile ../pyproject.toml --extra=extract --extra=transform --output-file requirements.txt
+uv pip compile ../pyproject.toml --extra=extract --extra=transform --extra=orchestration --output-file requirements.txt
 ```
 
 ### 🔐 Creating a Custom Admin User

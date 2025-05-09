@@ -1,6 +1,7 @@
 {{ config(
     materialized='table',
-    schema='silver'
+    schema='silver',
+    tags=['expense']
 ) }}
 
 select
