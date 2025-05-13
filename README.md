@@ -1,6 +1,8 @@
 # DuckDB Quant Pipeline
 
-A modern data pipeline for extracting Google Sheets data, transforming with DuckDB & dbt, and orchestrating with Airflow.
+A lightweight and modern data pipeline for extracting quantitative data from Google Sheets, transforming it with DuckDB and dbt, and orchestrating the workflow using Airflow. Final dashboards are served through Superset.
+
+This pipeline is ideal for fast, reproducible analytics workflows without requiring complex infrastructure.
 
 ## 🛠️ Tech Stack
 
@@ -19,6 +21,28 @@ A modern data pipeline for extracting Google Sheets data, transforming with Duck
 | **Workflow**    | Airflow DAGs with Cosmos             | [![Airflow](https://img.shields.io/badge/Airflow-017CEE?style=flat-square&logo=apacheairflow&logoColor=white)](https://airflow.apache.org) |
 | **Dashboards**  | Superset analytics                   | [![Superset](https://img.shields.io/badge/Superset-2598F9?style=flat-square&logo=apachesuperset&logoColor=white)](https://superset.apache.org) |
 
+
+
+## 📈 Data Pipeline Flow
+
+```mermaid
+flowchart TD
+    subgraph E[Airflow]
+        A[Extract: Google Sheets]
+        B[Load: DuckDB]
+        C[Transform: dbt + DuckDB]
+    end
+
+    D[📊 Visualize: Superset]
+
+    A --> B --> C --> D
+
+    style A fill:#E6F4EA,stroke:#34A853,stroke-width:2px
+    style B fill:#FFF3CC,stroke:#FFCD00,stroke-width:2px
+    style C fill:#FDECEA,stroke:#FF5733,stroke-width:2px
+    style D fill:#EAF1FB,stroke:#4285F4,stroke-width:2px
+    style E stroke:#005B96,stroke-width:2px
+```
 
 ## 🚀 Getting Started
 

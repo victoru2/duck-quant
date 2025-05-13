@@ -1,12 +1,22 @@
+<!-- ### 🛠 Initialize dbt Project
+```sh
 dbt init duck_quant
-
+``` -->
 
 ### Configure the profiles.yml file
 Set up the `profiles.yml` file to define the connection with the [adapter](https://docs.getdbt.com/docs/trusted-adapters) destination.
 
-## Load environment variables
+<!-- ## Load environment variables
 ```sh
 export $(cat .env | xargs)
+``` -->
+
+### [🧾📏✨SQL Style](https://docs.getdbt.com/best-practices/how-we-style/2-how-we-style-our-sql)
+
+### ▶️ Activate the virtual environment
+Before running any dbt commands, make sure to activate the virtual environment [created with uv](https://github.com/victoru2/duck-quant?tab=readme-ov-file#-installation):
+```sh
+source .venv/bin/activate
 ```
 
 ## Useful Commands
