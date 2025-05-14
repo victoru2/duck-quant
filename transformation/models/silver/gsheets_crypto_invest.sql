@@ -4,6 +4,8 @@
     tags=['crypto_invest']
 ) }}
 
+{% set stablecoins = ('usdt', 'usdc', 'dai') %}
+
 select
     strptime(date, '%d/%m/%Y')::DATE as transaction_date,
     trim(coin) as coin,
@@ -22,6 +24,11 @@ select
     nullif(trim(fee_coin), '') as fee_coin,
     nullif(trim(tx_id), '') as tx_id,
     lower(trim(transaction_type)) as transaction_type,
-    lower(trim(exchange)) as exchange_name
+    lower(trim(exchange)) as exchange_name,
+    lower(trim(notes)) as notes,
+    case
+        when lower(trim(coin)) in {{ stablecoins }} then true
+        else false
+    end as is_stablecoin
 from
     {{ ref('gsheets_crypto_invest_raw') }}
