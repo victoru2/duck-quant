@@ -11,11 +11,7 @@ latest_prices as (
     select
         symbol,
         price_usd
-    from {{ ref('binance_prices') }}
-    qualify row_number() over (
-        partition by symbol
-        order by updated_at desc
-    ) = 1
+    from {{ ref('binance_prices_current') }}
 ),
 
 transactions_with_fees as (
@@ -27,6 +23,9 @@ transactions_with_fees as (
         fee,
         fee_coin,
         tx_id,
+        fiat_amount,
+        fiat_price,
+        fiat_currency,
         transaction_type,
         exchange_name,
         notes,
@@ -42,10 +41,25 @@ select
     t.fee,
     t.fee_coin,
     t.tx_id,
+    t.fiat_amount,
+    t.fiat_price,
+    t.fiat_currency,
     t.transaction_type,
     t.exchange_name,
     t.notes,
     t.is_stablecoin,
+    case
+        when
+            t.transaction_type in ('sell', 'withdrawal', 'spot to earn')
+            then t.amount * -1
+        else t.amount
+    end as trade_amount,
+    case
+        when
+            t.transaction_type in ('sell', 'withdrawal', 'spot to earn')
+            then (t.amount + coalesce(t.fee, 0)) * -1 else
+            t.amount - coalesce(t.fee, 0)
+    end as net_amount,
     case
         when t.is_stablecoin then t.fee
         else t.fee * coalesce(p.price_usd, 0)
