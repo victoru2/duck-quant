@@ -9,11 +9,9 @@ select
     case
         when amount = '' or amount is null then null
         else
-            abs(
-                cast(
-                    replace(replace(amount, '.', ''), ',', '.') as DECIMAL(
-                        20, 8
-                    )
+            cast(
+                replace(replace(amount, '.', ''), ',', '.') as DECIMAL(
+                    20, 8
                 )
             )
     end as amount,
