@@ -4,7 +4,8 @@
     tags=['expense']
 ) }}
 
-with expenses as (
+with
+expenses as (
     select
         expense_type,
         amount,
